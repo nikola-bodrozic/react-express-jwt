@@ -3,29 +3,26 @@ const app = express();
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const EventEmitter = require('events');
-var bodyParser = require('body-parser')
+const bodyParser = require('body-parser')
 
 // node event handling 
 const emitter = new EventEmitter();
 emitter.on('userLoggedIn', () =>  console.log("event is handled") )
 
 var users = [{
-    "id": 1,
-    "name": "French",
-    "email": "edwardsfrench@bovis.com"
+  "id": 1,
+  "name": "Bradney",
+  "email": "bmomery0@sakura.ne.jp"
 }, {
-    "id": 2,
-    "name": "Holland",
-    "email": "goodholland@bovis.com"
-}, {
-    "id": 3,
-    "name": "Lloyd",
-    "email": "oyd@bovis.com"
+  "id": 2,
+  "name": "Tommie",
+  "email": "tcovino1@ycombinator.com"
 }]
+
 var user = {
-    "id": 1,
-    "name": "French",
-    "email": "edwardsfrench@bovis.com"
+  "id": 2,
+  "name": "Tommie",
+  "email": "tcovino1@ycombinator.com"
 }
 
 var sec = '';
@@ -46,11 +43,12 @@ app.get('/', (req, res) => res.send('Hello get'))
 app.get('/users', (req, res) => res.json(users))
 
 app.get('/users/:id', function(req, res) {
-  var id = req.params.id;
-  var selUser;
-  users.forEach(function(item, key) {
+  const id = req.params.id;
+  var selUser = null;
+  users.forEach((item, key) => {
     if (item.id == id) selUser = item;
   });
+  if(selUser === null) res.send({ error: "user doesn't exist" });
   res.setHeader('Content-Type', 'application/json')
   res.json(selUser);
 });
@@ -63,7 +61,7 @@ app.get('/users/name/:name', function(req, res) {
 
 // POST call - JSON in HTTP body 
 app.post('/users', verifyToken,(req, res) => {
-    var id = Math.floor((Math.random() * 10) + 5)
+    var id = Math.floor((Math.random() * 1000) + 50)
     users.push({
         "id": id,
         "name": req.body.name,
@@ -71,7 +69,7 @@ app.post('/users', verifyToken,(req, res) => {
     })
 
     res.setHeader('Content-Type', 'application/json')
-    res.json({'ID': id})
+    res.status(201).json({'ID': id})
     fs.writeFile('log.txt', JSON.stringify(users,null,'\t'), () => { 
       console.log('user added') 
     });
@@ -81,7 +79,7 @@ app.post('/users', verifyToken,(req, res) => {
 app.patch('/users/:id', verifyToken, (req, res) => {
     var id = req.params.id;
     var name = req.body.name
-    users.forEach(function(item, key) {
+    users.forEach((item, key) => {
         if (item.id == id) {
             const object2 = Object.assign(item, {
                 name: name
@@ -89,12 +87,10 @@ app.patch('/users/:id', verifyToken, (req, res) => {
         }
         console.log(JSON.stringify(users, null, 4));
     });
-    res.json({
-        'message': 'name is updated'
-    })
+    res.json({'message': 'name is updated'})
 })
 
-// get jwt urlencoded in HTTP body
+// get JWT in HTTP body
 app.post('/login', (req, res) => {
 
   console.log(req.body.username)
@@ -104,54 +100,11 @@ app.post('/login', (req, res) => {
     jwt.sign({user}, 'secretkey', { expiresIn: '1200s' }, (err, token) => {
       sec = token;
       console.log(token);
-      res.json({ token:token });
+      res.json({ token });
     });
     emitter.emit('userLoggedIn');
-  } else {
-    res.sendStatus(403);
   }
 });
-
-// two promises
-app.get('/twoprom',  (req, res) => {
-    let promise1 = new Promise((resolve, reject) => {
-        setTimeout(() => resolve('resolved after 4 seconds'), 4000)
-    })
-    let promise2 = new Promise((resolve, reject) => {
-        setTimeout(() => resolve('resolved after 3 seconds'), 3000)
-    })
-    Promise.all([promise1, promise2]).then(
-        (values) => console.log(values)
-    );
-    res.json(['done'])
-})
-
-
-// promise
-app.post('/promise', (req, res) => {
-        var name;
-        let prom = new Promise((resolve, reject) => {
-            try {
-                name = req.body.name
-                if (name === "French") resolve ('resolved')
-                else
-                    throw new Error("cannot extract name param or name <> 'French'")
-            } catch (err) {
-                reject(err);
-            } finally {
-                res.json(['done'])
-            }
-        })
-        console.log(prom)
-
-        prom
-            .then((res) => {
-                console.log(res)
-            })
-            .catch((err) => {
-                console.log(err)
-            })
-    })
 
 
 // Verify Token
@@ -167,8 +120,8 @@ function verifyToken(req, res, next) {
   } else {
     res.sendStatus(403);
   }
-
 }    
 
 // start server
-app.listen(3008, () => {console.log('Example app listening on 3008')});
+const port = 3008
+app.listen(port, () => {console.log(`Example app listening on ${port}`)});
